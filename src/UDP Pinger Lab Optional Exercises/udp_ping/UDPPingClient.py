@@ -1,0 +1,54 @@
+### GOKHAN HAS - 161044067 ###
+###### CSE 476 - LAB 02 ######
+
+from socket import *
+import time
+
+# initialize socket adress parameters
+port_number = 12000
+ip_adress = "192.168.0.32"
+
+rtt_max = 0
+rtt_min = 1
+rtt_sum = 0
+loss_packet = 0
+
+# Create a UDP socket by using SOCK_DGRAM
+clientSocket = socket(AF_INET, SOCK_DGRAM)
+
+# Set the timeout, if the server is not responding (second)
+clientSocket.settimeout(1)
+socket_addr = (ip_adress, port_number)
+
+# Send ping for 10 times
+for i in range(10):
+    first_time = time.time()
+    # Message Format in assignment pdf : Ping sequence_number time
+    msg = 'Ping ' + str(i + 1) + " " + str(time.strftime("%H:%M:%S"))
+    # Send datagram
+    clientSocket.sendto(bytes(msg.encode()), socket_addr)
+
+    try:
+        data, server = clientSocket.recvfrom(1024)
+        second_time = time.time()
+        rtt = second_time - first_time
+        print("Message has been received : ", data.decode())
+        if rtt > rtt_max:
+            rtt_max = rtt
+        if rtt < rtt_min:
+            rtt_min = rtt
+        rtt_sum = rtt_sum + rtt
+
+    except timeout:
+        print('Request timed out')
+        loss_packet = loss_packet + 1
+
+
+rtt_avg = rtt_sum / 10
+loss_val = (loss_packet / 10) * 100
+loss_message = '%' + str(loss_val)
+
+print('MAX RTT = {}'.format(rtt_max))
+print('MIN RTT = {}'.format(rtt_min))
+print('AVG RTT = {}'.format(rtt_avg))
+print('PACKET LOSS = {}'.format(loss_message))
